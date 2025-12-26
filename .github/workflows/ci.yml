@@ -46,14 +46,14 @@ jobs:
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          username: evgeniybardik
+          password: ${{ secrets.GHCR_TOKEN || secrets.GITHUB_TOKEN }}
       
       - name: Extract metadata
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/${{ github.repository_owner }}/loadmaster-worker
+          images: ghcr.io/evgeniybardik/loadmaster-worker
           tags: |
             type=ref,event=branch
             type=ref,event=pr
