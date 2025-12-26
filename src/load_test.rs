@@ -3,7 +3,7 @@ use crate::types::{LoadTestMessage, Metric, TestResult, TimeSeriesPoint};
 use anyhow::Result;
 use chrono::Utc;
 use lapin::{options::*, Channel};
-use log::{error, info};
+use log::info;
 use reqwest::{Client, Method};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
@@ -72,7 +72,7 @@ impl LoadTestExecutor {
 
             let permit = semaphore.clone().acquire_owned().await?;
             let client = client.clone();
-            let stats = stats.clone();
+            let stats_clone = stats.clone();
             let message = self.message.clone();
 
             let handle = tokio::spawn(async move {
@@ -104,11 +104,11 @@ impl LoadTestExecutor {
                         let status = response.status();
                         let response_time = request_start.elapsed().as_millis() as u64;
 
-                        let mut stats = stats.lock().await;
+                        let mut stats = stats_clone.lock().await;
                         stats.record_success(response_time, status.as_u16());
                     }
                     Err(e) => {
-                        let mut stats = stats.lock().await;
+                        let mut stats = stats_clone.lock().await;
                         stats.record_failure(e.to_string());
                     }
                 }

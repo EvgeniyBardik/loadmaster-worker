@@ -1,4 +1,5 @@
 use anyhow::Result;
+use futures_lite::stream::StreamExt;
 use lapin::{
     options::*, types::FieldTable, Connection, ConnectionProperties,
 };
@@ -110,20 +111,18 @@ async fn main() -> Result<()> {
                         });
 
                         // Acknowledge message
-                        delivery
-                            .ack(BasicAckOptions::default())
-                            .await
-                            .expect("Failed to ack");
+                        if let Err(e) = delivery.ack(BasicAckOptions::default()).await {
+                            error!("Failed to ack message: {}", e);
+                        }
                     }
                     Err(e) => {
                         error!("❌ Failed to parse message: {}", e);
-                        delivery
-                            .nack(BasicNackOptions {
-                                requeue: false,
-                                ..Default::default()
-                            })
-                            .await
-                            .expect("Failed to nack");
+                        if let Err(e) = delivery.nack(BasicNackOptions {
+                            requeue: false,
+                            ..Default::default()
+                        }).await {
+                            error!("Failed to nack message: {}", e);
+                        }
                     }
                 }
             }
